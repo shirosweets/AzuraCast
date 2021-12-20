@@ -8,6 +8,7 @@ use App\Acl;
 use App\Entity\Repository\SettingsRepository;
 use App\Http\ServerRequest;
 use App\Radio\Adapters;
+use App\Radio\Enums\FrontendAdapters;
 use DateTime;
 use DateTimeZone;
 use Symfony\Component\Intl\Countries;
@@ -30,7 +31,7 @@ class StationFormComponent implements VueComponentInterface
             'showAdminTab'          => $request->getAcl()->isAllowed(Acl::GLOBAL_STATIONS),
             'showAdvanced'          => $settings->getEnableAdvancedFeatures(),
             'timezones'             => $this->getTimezones(),
-            'isShoutcastInstalled'  => isset($installedFrontends[Adapters::FRONTEND_SHOUTCAST]),
+            'isShoutcastInstalled'  => isset($installedFrontends[FrontendAdapters::SHOUTcast->value]),
             'countries'             => Countries::getNames(),
             'storageLocationApiUrl' => (string)$request->getRouter()->named('api:admin:stations:storage-locations'),
         ];

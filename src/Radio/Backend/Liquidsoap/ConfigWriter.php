@@ -10,8 +10,10 @@ use App\Event\Radio\WriteLiquidsoapConfiguration;
 use App\Exception;
 use App\Flysystem\StationFilesystems;
 use App\Message;
-use App\Radio\Adapters;
 use App\Radio\Backend\Liquidsoap;
+use App\Radio\Enums\FrontendAdapters;
+use App\Radio\Enums\StreamFormats;
+use App\Radio\Enums\StreamProtocols;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerInterface;
@@ -857,7 +859,7 @@ class ConfigWriter implements EventSubscriberInterface
         }
 
         if ($recordLiveStreams) {
-            $recordLiveStreamsFormat = $settings['record_streams_format'] ?? Entity\Interfaces\StationMountInterface::FORMAT_MP3;
+            $recordLiveStreamsFormat = $settings->getRecordStreamsFormatEnum() ?? StreamFormats::Mp3;
             $recordLiveStreamsBitrate = (int)($settings['record_streams_bitrate'] ?? 128);
 
             $formatString = $this->getOutputFormatString($recordLiveStreamsFormat, $recordLiveStreamsBitrate);
@@ -974,7 +976,7 @@ class ConfigWriter implements EventSubscriberInterface
     {
         $station = $event->getStation();
 
-        if (Adapters::FRONTEND_REMOTE === $station->getFrontendType()) {
+        if (FrontendAdapters::Remote === $station->getFrontendTypeEnum()) {
             return;
         }
 
@@ -1009,8 +1011,9 @@ class ConfigWriter implements EventSubscriberInterface
     ): string {
         $charset = $station->getBackendConfig()->getCharset();
 
+        $format = $mount->getAutodjFormatEnum() ?? StreamFormats::Mp3;
         $output_format = $this->getOutputFormatString(
-            $mount->getAutodjFormat() ?? $mount::FORMAT_MP3,
+            $format,
             $mount->getAutodjBitrate() ?? 128
         );
 
@@ -1026,16 +1029,16 @@ class ConfigWriter implements EventSubscriberInterface
             $output_params[] = 'user = "' . self::cleanUpString($username) . '"';
         }
 
+        $protocol = $mount->getAutodjProtocolEnum();
+
         $password = self::cleanUpString($mount->getAutodjPassword());
-        if (Adapters::REMOTE_SHOUTCAST2 === $mount->getAutodjAdapterType()) {
+        if (StreamProtocols::Icy === $protocol) {
             $password .= ':#' . $id;
         }
         $output_params[] = 'password = "' . $password . '"';
 
-        $protocol = $mount->getAutodjProtocol();
-
         if (!empty($mount->getAutodjMount())) {
-            if ($mount::PROTOCOL_ICY === $protocol) {
+            if (StreamProtocols::Icy === $protocol) {
                 $output_params[] = 'icy_id = ' . $id;
             } else {
                 $output_params[] = 'mount = "' . self::cleanUpString($mount->getAutodjMount()) . '"';
@@ -1054,13 +1057,10 @@ class ConfigWriter implements EventSubscriberInterface
         $output_params[] = 'encoding = "' . $charset . '"';
 
         if (null !== $protocol) {
-            $output_params[] = 'protocol="' . $protocol . '"';
+            $output_params[] = 'protocol="' . $protocol->value . '"';
         }
 
-        if (
-            Entity\Interfaces\StationMountInterface::FORMAT_OPUS === $mount->getAutodjFormat()
-            || Entity\Interfaces\StationMountInterface::FORMAT_FLAC === $mount->getAutodjFormat()
-        ) {
+        if ($format->sendIcyMetadata()) {
             $output_params[] = 'icy_metadata="true"';
         }
 
@@ -1069,25 +1069,25 @@ class ConfigWriter implements EventSubscriberInterface
         return 'output.icecast(' . implode(', ', $output_params) . ')';
     }
 
-    protected function getOutputFormatString(string $format, int $bitrate = 128): string
+    protected function getOutputFormatString(StreamFormats $format, int $bitrate = 128): string
     {
-        switch (strtolower($format)) {
-            case Entity\Interfaces\StationMountInterface::FORMAT_AAC:
+        switch ($format) {
+            case StreamFormats::Aac:
                 $afterburner = ($bitrate >= 160) ? 'true' : 'false';
                 $aot = ($bitrate >= 96) ? 'mpeg4_aac_lc' : 'mpeg4_he_aac_v2';
 
                 return '%fdkaac(channels=2, samplerate=44100, bitrate=' . $bitrate . ', afterburner=' . $afterburner . ', aot="' . $aot . '", sbr_mode=true)';
 
-            case Entity\Interfaces\StationMountInterface::FORMAT_OGG:
+            case StreamFormats::Ogg:
                 return '%vorbis.cbr(samplerate=44100, channels=2, bitrate=' . $bitrate . ')';
 
-            case Entity\Interfaces\StationMountInterface::FORMAT_OPUS:
+            case StreamFormats::Opus:
                 return '%opus(samplerate=48000, bitrate=' . $bitrate . ', vbr="constrained", application="audio", channels=2, signal="music", complexity=10, max_bandwidth="full_band")';
 
-            case Entity\Interfaces\StationMountInterface::FORMAT_FLAC:
+            case StreamFormats::Flac:
                 return '%ogg(%flac(samplerate=48000, channels=2, compression=4, bits_per_sample=24))';
 
-            case Entity\Interfaces\StationMountInterface::FORMAT_MP3:
+            case StreamFormats::Mp3:
             default:
                 return '%mp3(samplerate=44100, stereo=true, bitrate=' . $bitrate . ', id3v2=true)';
         }

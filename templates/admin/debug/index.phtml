@@ -106,24 +106,30 @@ $this->layout('main', [
 
                 <div class="row">
                     <div class="col">
-                        <h5><?=__('Rebuild AutoDJ Queue')?></h5>
+                        <h5><?= __('Rebuild AutoDJ Queue') ?></h5>
 
                         <div class="buttons">
-                            <a class="btn btn-sm btn-primary" role="button" href="<?=$router->named('admin:debug:nextsong',
-                                ['station_id' => $station['id']])?>">
-                                <?=__('Run Test')?>
+                            <a class="btn btn-sm btn-primary" role="button" href="<?= $router->named(
+                                'admin:debug:nextsong',
+                                ['station_id' => $station['id']]
+                            ) ?>">
+                                <?= __('Run Test') ?>
                             </a>
                         </div>
                     </div>
-                    <?php if ($station['backend_type'] === \App\Radio\Adapters::BACKEND_LIQUIDSOAP): ?>
+                    <?php
+                    if ($station['backend_type'] === \App\Radio\Enums\BackendAdapters::Liquidsoap->value): ?>
                         <div class="col">
-                            <h5><?=__('Send Liquidsoap Telnet Command')?></h5>
+                            <h5><?= __('Send Liquidsoap Telnet Command') ?></h5>
 
-                            <form class="form" method="POST" action="<?=$router->named('admin:debug:telnet',
-                                ['station_id' => $station['id']])?>">
+                            <form class="form" method="POST" action="<?= $router->named(
+                                'admin:debug:telnet',
+                                ['station_id' => $station['id']]
+                            ) ?>">
                                 <div class="form-group">
-                                    <label for="<?=$station['id']?>_command"><?=__('Command')?>:</label>
-                                    <input id="<?=$station['id']?>_command" name="command" class="form-control" type="text">
+                                    <label for="<?= $station['id'] ?>_command"><?= __('Command') ?>:</label>
+                                    <input id="<?= $station['id'] ?>_command" name="command" class="form-control"
+                                           type="text">
                                 </div>
 
                                 <button type="submit" class="btn btn-primary"><?=__('Execute Command')?></button>

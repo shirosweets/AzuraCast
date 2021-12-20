@@ -8,6 +8,8 @@ use App\Entity\Station;
 use App\Entity\StationPlaylist;
 use App\Environment;
 use App\Exception;
+use App\Radio\Enums\BackendAdapters;
+use App\Radio\Enums\FrontendAdapters;
 use Doctrine\ORM\EntityManagerInterface;
 use Monolog\Logger;
 use Supervisor\Exception\SupervisorException;
@@ -266,8 +268,8 @@ class Configuration
     public function assignRadioPorts(Station $station, bool $force = false): void
     {
         if (
-            $station->getFrontendType() !== Adapters::FRONTEND_REMOTE
-            || $station->getBackendType() !== Adapters::BACKEND_NONE
+            FrontendAdapters::Remote !== $station->getFrontendTypeEnum()
+            || BackendAdapters::Liquidsoap !== $station->getBackendTypeEnum()
         ) {
             $frontend_config = $station->getFrontendConfig();
             $backend_config = $station->getBackendConfig();
@@ -360,7 +362,7 @@ class Configuration
             foreach ($station_configs as $row) {
                 $station_reference = ['id' => $row['id'], 'name' => $row['name']];
 
-                if ($row['frontend_type'] !== Adapters::FRONTEND_REMOTE) {
+                if ($row['frontend_type'] !== FrontendAdapters::Remote->value) {
                     $frontend_config = (array)$row['frontend_config'];
 
                     if (!empty($frontend_config['port'])) {
@@ -369,7 +371,7 @@ class Configuration
                     }
                 }
 
-                if ($row['backend_type'] !== Adapters::BACKEND_NONE) {
+                if ($row['backend_type'] !== BackendAdapters::None->value) {
                     $backend_config = (array)$row['backend_config'];
 
                     // For DJ port, consider both the assigned port and port+1 to be reserved and in-use.

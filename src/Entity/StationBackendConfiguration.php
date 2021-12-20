@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Radio\Enums\StreamFormats;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class StationBackendConfiguration extends ArrayCollection
@@ -65,9 +66,21 @@ class StationBackendConfiguration extends ArrayCollection
         return $this->get(self::RECORD_STREAMS_FORMAT);
     }
 
+    public function getRecordStreamsFormatEnum(): ?StreamFormats
+    {
+        $recordStreamsFormat = $this->getRecordStreamsFormat();
+        return (null !== $recordStreamsFormat)
+            ? StreamFormats::from(strtolower($recordStreamsFormat))
+            : null;
+    }
+
     public function setRecordStreamsFormat(?string $format): void
     {
-        $this->set(self::RECORD_STREAMS_FORMAT, $format);
+        if (null !== $format && null === StreamFormats::tryFrom(strtolower($format))) {
+            throw new \InvalidArgumentException('Invalid recording type specified.');
+        }
+
+        $this->set(self::RECORD_STREAMS_FORMAT, strtolower($format));
     }
 
     public const USE_MANUAL_AUTODJ = 'use_manual_autodj';

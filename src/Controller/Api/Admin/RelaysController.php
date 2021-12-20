@@ -9,6 +9,8 @@ use App\Entity;
 use App\Http\Response;
 use App\Http\ServerRequest;
 use App\Radio\Adapters;
+use App\Radio\Enums\FrontendAdapters;
+use App\Radio\Enums\RemoteAdapters;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Annotations as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -91,7 +93,7 @@ class RelaysController
                 WHERE s.is_enabled = 1
                 AND s.frontend_type != :remote_frontend
             DQL
-        )->setParameter('remote_frontend', Adapters::FRONTEND_REMOTE)
+        )->setParameter('remote_frontend', FrontendAdapters::Remote->value)
             ->execute();
 
         $acl = $request->getAcl();
@@ -155,11 +157,11 @@ class RelaysController
                 }
 
                 $remote->setRelay($relay);
-                $remote->setType(Adapters::REMOTE_AZURARELAY);
+                $remote->setType(RemoteAdapters::AzuraRelay->value);
                 $remote->setDisplayName($mount->getDisplayName() . ' (' . $relay->getName() . ')');
                 $remote->setIsVisibleOnPublicPages($relay->getIsVisibleOnPublicPages());
                 $remote->setAutodjBitrate($mount->getAutodjBitrate());
-                $remote->setAutodjFormat($mount->getAutodjFormat());
+                $remote->setAutodjFormat($mount->getAutodjFormatEnum());
                 $remote->setUrl($relay->getBaseUrl());
                 $remote->setMount($mount->getName());
 

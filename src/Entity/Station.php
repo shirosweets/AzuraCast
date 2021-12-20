@@ -7,7 +7,8 @@ namespace App\Entity;
 use App\Entity\Interfaces\EntityGroupsInterface;
 use App\Entity\Interfaces\IdentifiableEntityInterface;
 use App\Environment;
-use App\Radio\Adapters;
+use App\Radio\Enums\BackendAdapters;
+use App\Radio\Enums\FrontendAdapters;
 use App\Utilities\File;
 use App\Utilities\Urls;
 use App\Validator\Constraints as AppAssert;
@@ -79,10 +80,9 @@ class Station implements Stringable, IdentifiableEntityInterface
             example: "icecast"
         ),
         ORM\Column(length: 100, nullable: true),
-        Assert\Choice(choices: [Adapters::FRONTEND_ICECAST, Adapters::FRONTEND_REMOTE, Adapters::FRONTEND_SHOUTCAST]),
         Serializer\Groups([EntityGroupsInterface::GROUP_GENERAL, EntityGroupsInterface::GROUP_ALL])
     ]
-    protected ?string $frontend_type = Adapters::FRONTEND_ICECAST;
+    protected ?string $frontend_type = null;
 
     #[
         OA\Property(
@@ -101,10 +101,9 @@ class Station implements Stringable, IdentifiableEntityInterface
             example: "liquidsoap"
         ),
         ORM\Column(length: 100, nullable: true),
-        Assert\Choice(choices: [Adapters::BACKEND_LIQUIDSOAP, Adapters::BACKEND_NONE]),
         Serializer\Groups([EntityGroupsInterface::GROUP_GENERAL, EntityGroupsInterface::GROUP_ALL])
     ]
-    protected ?string $backend_type = Adapters::BACKEND_LIQUIDSOAP;
+    protected ?string $backend_type = null;
 
     #[
         OA\Property(
@@ -388,6 +387,9 @@ class Station implements Stringable, IdentifiableEntityInterface
 
     public function __construct()
     {
+        $this->frontend_type = FrontendAdapters::Icecast->value;
+        $this->backend_type = BackendAdapters::Liquidsoap->value;
+
         $this->history = new ArrayCollection();
         $this->playlists = new ArrayCollection();
         $this->mounts = new ArrayCollection();
@@ -444,8 +446,17 @@ class Station implements Stringable, IdentifiableEntityInterface
         return $this->frontend_type;
     }
 
+    public function getFrontendTypeEnum(): FrontendAdapters
+    {
+        return FrontendAdapters::from($this->frontend_type);
+    }
+
     public function setFrontendType(?string $frontend_type = null): void
     {
+        if (null !== $frontend_type && null === FrontendAdapters::tryFrom($frontend_type)) {
+            throw new \InvalidArgumentException('Invalid frontend type specified.');
+        }
+
         $this->frontend_type = $frontend_type;
     }
 
@@ -488,8 +499,17 @@ class Station implements Stringable, IdentifiableEntityInterface
         return $this->backend_type;
     }
 
+    public function getBackendTypeEnum(): BackendAdapters
+    {
+        return BackendAdapters::from($this->backend_type);
+    }
+
     public function setBackendType(string $backend_type = null): void
     {
+        if (null !== $backend_type && null === BackendAdapters::tryFrom($backend_type)) {
+            throw new \InvalidArgumentException('Invalid frontend type specified.');
+        }
+
         $this->backend_type = $backend_type;
     }
 
