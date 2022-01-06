@@ -4,106 +4,156 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Admin;
 
+use App\Controller\Api\Traits\CanSortResults;
 use App\Doctrine\ReloadableEntityManagerInterface;
 use App\Entity;
 use App\Exception\ValidationException;
+use App\Http\Response;
 use App\Http\ServerRequest;
+use App\OpenApi;
 use App\Radio\Adapters;
 use App\Radio\Configuration;
 use App\Utilities\File;
 use InvalidArgumentException;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-/**
- * @OA\Get(path="/admin/stations",
- *   operationId="adminGetStations",
- *   tags={"Administration: Stations"},
- *   description="List all current stations in the system.",
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Station"))
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Post(path="/admin/stations",
- *   operationId="adminAddStation",
- *   tags={"Administration: Stations"},
- *   description="Create a new station.",
- *   @OA\RequestBody(
- *     @OA\JsonContent(ref="#/components/schemas/Station")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Station")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Get(path="/admin/station/{id}",
- *   operationId="adminGetStation",
- *   tags={"Administration: Stations"},
- *   description="Retrieve details for a single station.",
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Station")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Put(path="/admin/station/{id}",
- *   operationId="adminEditStation",
- *   tags={"Administration: Stations"},
- *   description="Update details of a single station.",
- *   @OA\RequestBody(
- *     @OA\JsonContent(ref="#/components/schemas/Station")
- *   ),
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Api_Status")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Delete(path="/admin/station/{id}",
- *   operationId="adminDeleteStation",
- *   tags={"Administration: Stations"},
- *   description="Delete a single station.",
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Api_Status")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @extends AbstractAdminApiCrudController<Entity\Station>
- */
+/** @extends AbstractAdminApiCrudController<Entity\Station> */
+#[
+    OA\Get(
+        path: '/admin/stations',
+        operationId: 'adminGetStations',
+        description: 'List all current stations in the system.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Stations'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Station')
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Post(
+        path: '/admin/stations',
+        operationId: 'adminAddStation',
+        description: 'Create a new station.',
+        security: OpenApi::API_KEY_SECURITY,
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(ref: '#/components/schemas/Station')
+        ),
+        tags: ['Administration: Stations'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Station')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Get(
+        path: '/admin/station/{id}',
+        operationId: 'adminGetStation',
+        description: 'Retrieve details for a single station.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Stations'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Station')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Put(
+        path: '/admin/station/{id}',
+        operationId: 'adminEditStation',
+        description: 'Update details of a single station.',
+        security: OpenApi::API_KEY_SECURITY,
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(ref: '#/components/schemas/Station')
+        ),
+        tags: ['Administration: Stations'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Delete(
+        path: '/admin/station/{id}',
+        operationId: 'adminDeleteStation',
+        description: 'Delete a single station.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Stations'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    )
+]
 class StationsController extends AbstractAdminApiCrudController
 {
+    use CanSortResults;
+
     protected string $entityClass = Entity\Station::class;
     protected string $resourceRouteName = 'api:admin:station';
 
@@ -118,7 +168,33 @@ class StationsController extends AbstractAdminApiCrudController
     ) {
         parent::__construct($reloadableEm, $serializer, $validator);
     }
+    /**
+     * @param ServerRequest $request
+     * @param Response $response
+     */
+    public function listAction(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('e')
+            ->from(Entity\Station::class, 'e');
 
+        $qb = $this->sortQueryBuilder(
+            $request,
+            $qb,
+            [
+                'name' => 'e.name',
+            ],
+            'e.name'
+        );
+
+        $searchPhrase = trim($request->getParam('searchPhrase', ''));
+        if (!empty($searchPhrase)) {
+            $qb->andWhere('(e.name LIKE :name OR e.short_name LIKE :name)')
+                ->setParameter('name', '%' . $searchPhrase . '%');
+        }
+
+        return $this->listPaginatedFromQuery($request, $response, $qb->getQuery());
+    }
     protected function viewRecord(object $record, ServerRequest $request): mixed
     {
         if (!($record instanceof $this->entityClass)) {
@@ -150,7 +226,6 @@ class StationsController extends AbstractAdminApiCrudController
 
         return $return;
     }
-
     /**
      * @param Entity\Station $record
      * @param array<string, mixed> $context
@@ -176,7 +251,6 @@ class StationsController extends AbstractAdminApiCrudController
 
         return parent::toArray($record, $context);
     }
-
     protected function fromArray(array $data, ?object $record = null, array $context = []): object
     {
         foreach (Entity\Station::getStorageLocationTypes() as $locationKey) {
@@ -189,7 +263,6 @@ class StationsController extends AbstractAdminApiCrudController
 
         return parent::fromArray($data, $record, $context);
     }
-
     /**
      * @param array<mixed>|null $data
      * @param Entity\Station|null $record
@@ -216,7 +289,6 @@ class StationsController extends AbstractAdminApiCrudController
             ? $this->handleCreate($record)
             : $this->handleEdit($record);
     }
-
     /**
      * @param Entity\Station $record
      */
@@ -224,7 +296,6 @@ class StationsController extends AbstractAdminApiCrudController
     {
         $this->handleDelete($record);
     }
-
     protected function handleEdit(Entity\Station $station): Entity\Station
     {
         $original_record = $this->em->getUnitOfWork()->getOriginalEntityData($station);
@@ -262,7 +333,6 @@ class StationsController extends AbstractAdminApiCrudController
 
         return $station;
     }
-
     protected function handleCreate(Entity\Station $station): Entity\Station
     {
         $station->generateAdapterApiKey();
@@ -278,7 +348,6 @@ class StationsController extends AbstractAdminApiCrudController
 
         return $station;
     }
-
     protected function handleDelete(Entity\Station $station): void
     {
         $this->configuration->removeConfiguration($station);

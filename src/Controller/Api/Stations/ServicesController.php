@@ -8,78 +8,123 @@ use App\Entity;
 use App\Exception\Supervisor\NotRunningException;
 use App\Http\Response;
 use App\Http\ServerRequest;
-use App\Radio\AutoDJ;
+use App\OpenApi;
 use App\Radio\Backend\Liquidsoap;
 use App\Radio\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 
-/**
- * @OA\Get(path="/station/{station_id}/status",
- *   operationId="getServiceStatus",
- *   tags={"Stations: Service Control"},
- *   description="Retrieve the current status of all serivces associated with the radio broadcast.",
- *   @OA\Parameter(ref="#/components/parameters/station_id_required"),
- *   @OA\Response(
- *     response=200,
- *     description="Success",
- *     @OA\Schema(ref="#/components/schemas/Api_StationServiceStatus")
- *   ),
- *   @OA\Response(response=403, description="Access Forbidden", @OA\Schema(ref="#/components/schemas/Api_Error")),
- *   security={{"api_key": {}}}
- * )
- *
- * @OA\Post(path="/station/{station_id}/restart",
- *   operationId="restartServices",
- *   tags={"Stations: Service Control"},
- *   description="Restart all services associated with the radio broadcast.",
- *   @OA\Parameter(ref="#/components/parameters/station_id_required"),
- *   @OA\Response(response=200, description="Success", @OA\Schema(ref="#/components/schemas/Api_Status")),
- *   @OA\Response(response=403, description="Access Forbidden", @OA\Schema(ref="#/components/schemas/Api_Error")),
- *   security={{"api_key": {}}}
- * )
- *
- * @OA\Post(path="/station/{station_id}/frontend/{action}",
- *   operationId="doFrontendServiceAction",
- *   tags={"Stations: Service Control"},
- *   description="Perform service control actions on the radio frontend (Icecast, SHOUTcast, etc.)",
- *   @OA\Parameter(ref="#/components/parameters/station_id_required"),
- *   @OA\Parameter(
- *     name="action",
- *     description="The action to perform (start, stop, restart)",
- *     in="path",
- *     required=false,
- *     @OA\Schema(
- *         type="string",
- *         default="restart"
- *     )
- *   ),
- *   @OA\Response(response=200, description="Success", @OA\Schema(ref="#/components/schemas/Api_Status")),
- *   @OA\Response(response=403, description="Access Forbidden", @OA\Schema(ref="#/components/schemas/Api_Error")),
- *   security={{"api_key": {}}}
- * )
- *
- * @OA\Post(path="/station/{station_id}/backend/{action}",
- *   operationId="doBackendServiceAction",
- *   tags={"Stations: Service Control"},
- *   description="Perform service control actions on the radio backend (Liquidsoap)",
- *   @OA\Parameter(ref="#/components/parameters/station_id_required"),
- *   @OA\Parameter(
- *     name="action",
- *     description="The action to perform (for all: start, stop, restart; for Liquidsoap only: skip, disconnect)",
- *     in="path",
- *     required=false,
- *     @OA\Schema(
- *         type="string",
- *         default="restart"
- *     )
- *   ),
- *   @OA\Response(response=200, description="Success", @OA\Schema(ref="#/components/schemas/Api_Status")),
- *   @OA\Response(response=403, description="Access Forbidden", @OA\Schema(ref="#/components/schemas/Api_Error")),
- *   security={{"api_key": {}}}
- * )
- */
+#[
+    OA\Get(
+        path: '/station/{station_id}/status',
+        operationId: 'getServiceStatus',
+        description: 'Retrieve the current status of all serivces associated with the radio broadcast.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Stations: Service Control'],
+        parameters: [
+            new OA\Parameter(ref: OpenApi::STATION_ID_REQUIRED),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/Api_StationServiceStatus'
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access Forbidden',
+                content: new OA\JsonContent(
+                    ref: '#/components/schemas/Api_Error'
+                )
+            ),
+        ]
+    ),
+    OA\Post(
+        path: '/station/{station_id}/restart',
+        operationId: 'restartServices',
+        description: 'Restart all services associated with the radio broadcast.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Stations: Service Control'],
+        parameters: [
+            new OA\Parameter(ref: OpenApi::STATION_ID_REQUIRED),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access Forbidden',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Error')
+            ),
+        ]
+    ),
+    OA\Post(
+        path: '/station/{station_id}/frontend/{action}',
+        operationId: 'doFrontendServiceAction',
+        description: 'Perform service control actions on the radio frontend (Icecast, SHOUTcast, etc.)',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Stations: Service Control'],
+        parameters: [
+            new OA\Parameter(ref: OpenApi::STATION_ID_REQUIRED),
+            new OA\Parameter(
+                name: 'action',
+                description: 'The action to perform (start, stop, restart)',
+                in: 'path',
+                required: false,
+                schema: new OA\Schema(type: 'string', default: 'restart')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    schema: '#/components/schemas/Api_Status'
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access Forbidden',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Error')
+            ),
+        ]
+    ),
+    OA\Post(
+        path: '/station/{station_id}/backend/{action}',
+        operationId: 'doBackendServiceAction',
+        description: 'Perform service control actions on the radio backend (Liquidsoap)',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Stations: Service Control'],
+        parameters: [
+            new OA\Parameter(ref: OpenApi::STATION_ID_REQUIRED),
+            new OA\Parameter(
+                name: 'action',
+                description: 'The action to perform (for all: start, stop, restart, skip, disconnect)',
+                in: 'path',
+                required: false,
+                schema: new OA\Schema(type: 'string', default: 'restart')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access Forbidden',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Error')
+            ),
+        ]
+    )
+]
 class ServicesController
 {
     public function __construct(
@@ -155,7 +200,6 @@ class ServicesController
     public function backendAction(
         ServerRequest $request,
         Response $response,
-        AutoDJ $autodj,
         string $do = 'restart'
     ): ResponseInterface {
         $station = $request->getStation();

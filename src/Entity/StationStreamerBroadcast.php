@@ -8,7 +8,7 @@ use App\Entity\Interfaces\IdentifiableEntityInterface;
 use App\Radio\Enums\StreamFormats;
 use Carbon\CarbonImmutable;
 use Doctrine\ORM\Mapping as ORM;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 
 #[
     OA\Schema(

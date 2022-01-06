@@ -1,13 +1,19 @@
 <?php
 
-use OpenApi\Annotations as OA;
+declare(strict_types=1);
+
+namespace App;
+
+use OpenApi\Attributes as OA;
 
 #[
     OA\OpenApi(
+        openapi: '3.0.0',
         info: new OA\Info(
             version: AZURACAST_VERSION,
+            description: "AzuraCast is a standalone, turnkey web radio management tool. Radio stations hosted by"
+            . " AzuraCast expose a public API for viewing now playing data, making requests and more.",
             title: 'AzuraCast',
-            description: "AzuraCast is a standalone, turnkey web radio management tool. Radio stations hosted by AzuraCast expose a public API for viewing now playing data, making requests and more.",
             license: new OA\License(
                 name: 'Apache 2.0',
                 url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -15,14 +21,10 @@ use OpenApi\Annotations as OA;
         ),
         servers: [
             new OA\Server(
-                description: AZURACAST_API_NAME,
-                url: AZURACAST_API_URL
+                url: AZURACAST_API_URL,
+                description: AZURACAST_API_NAME
             ),
         ],
-        externalDocs: new OA\ExternalDocumentation(
-            description: "AzuraCast on GitHub",
-            url: "https://github.com/AzuraCast/AzuraCast"
-        ),
         tags: [
             new OA\Tag(
                 name: "Now Playing",
@@ -32,6 +34,7 @@ use OpenApi\Annotations as OA;
             new OA\Tag(name: "Stations: General"),
             new OA\Tag(name: "Stations: Song Requests"),
             new OA\Tag(name: "Stations: Service Control"),
+            new OA\Tag(name: "Stations: Automation"),
 
             new OA\Tag(name: "Stations: History"),
             new OA\Tag(name: "Stations: Listeners"),
@@ -55,18 +58,20 @@ use OpenApi\Annotations as OA;
             new OA\Tag(name: "Administration: Storage Locations"),
 
             new OA\Tag(name: "Miscellaneous"),
-        ]
+        ],
+        externalDocs: new OA\ExternalDocumentation(
+            description: "AzuraCast on GitHub",
+            url: "https://github.com/AzuraCast/AzuraCast"
+        )
     ),
     OA\Parameter(
         name: "station_id_required",
         in: "path",
         required: true,
         schema: new OA\Schema(
-            properties: [
-                'anyOf' => [
-                    new OA\Schema(type: "integer", format: "int64"),
-                    new OA\Schema(type: "string", format: "string")
-                ]
+            anyOf: [
+                new OA\Schema(type: "integer", format: "int64"),
+                new OA\Schema(type: "string", format: "string"),
             ]
         ),
     ),
@@ -75,15 +80,17 @@ use OpenApi\Annotations as OA;
         description: "This API call has no documented response (yet)",
     ),
     OA\SecurityScheme(
-        type: "apiKey",
-        in: "header",
         securityScheme: "api_key",
-        name: "X-API-Key"
+        type: "apiKey",
+        name: "X-API-Key",
+        in: "header"
     )
 ]
 class OpenApi
 {
+    public const SAMPLE_TIMESTAMP = 1609480800;
+
+    public const API_KEY_SECURITY = [['api_key' => []]];
+
+    public const STATION_ID_REQUIRED = '#/components/parameters/station_id_required';
 }
-
-
-

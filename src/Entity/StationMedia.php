@@ -8,6 +8,7 @@ use App\Entity\Interfaces\IdentifiableEntityInterface;
 use App\Entity\Interfaces\PathAwareInterface;
 use App\Entity\Interfaces\ProcessableMediaInterface;
 use App\Entity\Interfaces\SongInterface;
+use App\OpenApi;
 use App\Utilities\Time;
 use Azura\MetadataManager\Metadata;
 use Azura\MetadataManager\MetadataInterface;
@@ -16,7 +17,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use RuntimeException;
 use Symfony\Component\Serializer\Annotation as Serializer;
 
@@ -30,7 +31,6 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 class StationMedia implements SongInterface, ProcessableMediaInterface, PathAwareInterface, IdentifiableEntityInterface
 {
     use Traits\HasAutoIncrementId;
-    use Traits\TruncateStrings;
     use Traits\HasSongFields;
 
     public const UNIQUE_ID_LENGTH = 24;
@@ -122,7 +122,7 @@ class StationMedia implements SongInterface, ProcessableMediaInterface, PathAwar
     #[
         OA\Property(
             description: "The UNIX timestamp when the database was last modified.",
-            example: 1609480800
+            example: OpenApi::SAMPLE_TIMESTAMP
         ),
         ORM\Column(nullable: true)
     ]
@@ -185,7 +185,7 @@ class StationMedia implements SongInterface, ProcessableMediaInterface, PathAwar
     #[
         OA\Property(
             description: "The latest time (UNIX timestamp) when album art was updated.",
-            example: 1609480800
+            example: OpenApi::SAMPLE_TIMESTAMP
         ),
         ORM\Column
     ]
@@ -229,7 +229,7 @@ class StationMedia implements SongInterface, ProcessableMediaInterface, PathAwar
      *
      * @throws Exception
      */
-    public function generateUniqueId($force_new = false): void
+    public function generateUniqueId(bool $force_new = false): void
     {
         if (!isset($this->unique_id) || $force_new) {
             $this->unique_id = bin2hex(random_bytes(12));
@@ -427,6 +427,9 @@ class StationMedia implements SongInterface, ProcessableMediaInterface, PathAwar
         $this->art_updated_at = $art_updated_at;
     }
 
+    /**
+     * @return Collection<CustomField>
+     */
     public function getCustomFields(): Collection
     {
         return $this->custom_fields;
@@ -459,7 +462,7 @@ class StationMedia implements SongInterface, ProcessableMediaInterface, PathAwar
     }
 
     /**
-     * @return StationPlaylistMedia[]|Collection
+     * @return Collection<StationPlaylistMedia>
      */
     public function getPlaylists(): Collection
     {

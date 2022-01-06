@@ -4,103 +4,179 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Admin;
 
+use App\Controller\Api\Traits\CanSortResults;
 use App\Controller\Frontend\Account\MasqueradeAction;
 use App\Entity;
 use App\Http\Response;
 use App\Http\ServerRequest;
+use App\OpenApi;
 use InvalidArgumentException;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 
-/**
- * @OA\Get(path="/admin/users",
- *   operationId="getUsers",
- *   tags={"Administration: Users"},
- *   description="List all current users in the system.",
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/User"))
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Post(path="/admin/users",
- *   operationId="addUser",
- *   tags={"Administration: Users"},
- *   description="Create a new user.",
- *   @OA\RequestBody(
- *     @OA\JsonContent(ref="#/components/schemas/User")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/User")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Get(path="/admin/user/{id}",
- *   operationId="getUser",
- *   tags={"Administration: Users"},
- *   description="Retrieve details for a single current user.",
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="User ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/User")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Put(path="/admin/user/{id}",
- *   operationId="editUser",
- *   tags={"Administration: Users"},
- *   description="Update details of a single user.",
- *   @OA\RequestBody(
- *     @OA\JsonContent(ref="#/components/schemas/User")
- *   ),
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="User ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Api_Status")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Delete(path="/admin/user/{id}",
- *   operationId="deleteUser",
- *   tags={"Administration: Users"},
- *   description="Delete a single user.",
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="User ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Api_Status")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @extends AbstractAdminApiCrudController<Entity\User>
- */
+/** @extends AbstractAdminApiCrudController<Entity\User> */
+#[
+    OA\Get(
+        path: '/admin/users',
+        operationId: 'getUsers',
+        description: 'List all current users in the system.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Users'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/User')
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Post(
+        path: '/admin/users',
+        operationId: 'addUser',
+        description: 'Create a new user.',
+        security: OpenApi::API_KEY_SECURITY,
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(ref: '#/components/schemas/User')
+        ),
+        tags: ['Administration: Users'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/User')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Get(
+        path: '/admin/user/{id}',
+        operationId: 'getUser',
+        description: 'Retrieve details for a single current user.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Users'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'User ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/User')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Put(
+        path: '/admin/user/{id}',
+        operationId: 'editUser',
+        description: 'Update details of a single user.',
+        security: OpenApi::API_KEY_SECURITY,
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(ref: '#/components/schemas/User')
+        ),
+        tags: ['Administration: Users'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'User ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Delete(
+        path: '/admin/user/{id}',
+        operationId: 'deleteUser',
+        description: 'Delete a single user.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Users'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'User ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    )
+]
 class UsersController extends AbstractAdminApiCrudController
 {
+    use CanSortResults;
+
     protected string $entityClass = Entity\User::class;
     protected string $resourceRouteName = 'api:admin:user';
+
+    /**
+     * @param ServerRequest $request
+     * @param Response $response
+     */
+    public function listAction(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('e')
+            ->from(Entity\User::class, 'e');
+
+        $qb = $this->sortQueryBuilder(
+            $request,
+            $qb,
+            [
+                'name' => 'e.name',
+            ],
+            'e.name'
+        );
+
+        $searchPhrase = trim($request->getParam('searchPhrase', ''));
+        if (!empty($searchPhrase)) {
+            $qb->andWhere('(e.name LIKE :name OR e.email LIKE :name)')
+                ->setParameter('name', '%' . $searchPhrase . '%');
+        }
+
+        return $this->listPaginatedFromQuery($request, $response, $qb->getQuery());
+    }
 
     protected function viewRecord(object $record, ServerRequest $request): mixed
     {

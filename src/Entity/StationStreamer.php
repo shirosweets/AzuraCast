@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\OpenApi;
 use App\Validator\Constraints\UniqueEntity;
 use Azura\Normalizer\Attributes\DeepNormalize;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use Stringable;
 use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -85,7 +86,7 @@ class StationStreamer implements
     protected bool $enforce_schedule = false;
 
     #[
-        OA\Property(example: 1609480800),
+        OA\Property(example: OpenApi::SAMPLE_TIMESTAMP),
         ORM\Column(nullable: true),
         Attributes\AuditIgnore
     ]
@@ -208,7 +209,7 @@ class StationStreamer implements
     }
 
     /**
-     * @return Collection|StationSchedule[]
+     * @return Collection<StationSchedule>
      */
     public function getScheduleItems(): Collection
     {

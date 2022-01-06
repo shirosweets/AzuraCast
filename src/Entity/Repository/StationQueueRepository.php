@@ -31,13 +31,11 @@ class StationQueueRepository extends Repository
 
     public function getNextVisible(Entity\Station $station): ?Entity\StationQueue
     {
-        foreach ($this->getUnplayedQueue($station) as $sh) {
-            if ($sh->showInApis()) {
-                return $sh;
-            }
-        }
-
-        return null;
+        return $this->getUnplayedBaseQuery($station)
+            ->andWhere('sq.is_visible = 1')
+            ->getQuery()
+            ->setMaxResults(1)
+            ->getOneOrNullResult();
     }
 
     public function trackPlayed(
@@ -89,10 +87,10 @@ class StationQueueRepository extends Repository
 
         return $this->em->createQuery(
             <<<'DQL'
-                SELECT sq.song_id, sq.timestamp_cued, sq.timestamp_played, sq.title, sq.artist
+                SELECT sq.song_id, sq.timestamp_played, sq.title, sq.artist
                 FROM App\Entity\StationQueue sq
                 WHERE sq.station = :station
-                AND sq.timestamp_played >= :threshold
+                AND (sq.is_played = 0 OR sq.timestamp_played >= :threshold)
                 ORDER BY sq.timestamp_played DESC
             DQL
         )->setParameter('station', $station)
@@ -116,20 +114,12 @@ class StationQueueRepository extends Repository
 
     public function getLatestVisibleRow(Entity\Station $station): ?Entity\StationQueue
     {
-        $recentEntries = $this->getRecentBaseQuery($station)
+        return $this->getRecentBaseQuery($station)
             ->andWhere('sq.sent_to_autodj = 1')
-            ->setMaxResults(10)
+            ->andWhere('sq.is_visible = 1')
             ->getQuery()
-            ->execute();
-
-        $visibleEntries = array_filter(
-            $recentEntries,
-            static function (Entity\StationQueue $row): bool {
-                return $row->showInApis();
-            }
-        );
-
-        return reset($visibleEntries) ?: null;
+            ->setMaxResults(1)
+            ->getOneOrNullResult();
     }
 
     public function clearUpcomingQueue(Entity\Station $station): void

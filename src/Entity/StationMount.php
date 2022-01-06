@@ -11,7 +11,7 @@ use App\Radio\Enums\StreamProtocols;
 use App\Radio\Frontend\AbstractFrontend;
 use App\Utilities\Urls;
 use Doctrine\ORM\Mapping as ORM;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\UriInterface;
 use Stringable;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -182,7 +182,7 @@ class StationMount implements
         }
 
         if ($this->enable_autodj) {
-            return $this->autodj_bitrate . 'kbps ' . strtoupper($this->autodj_format ?? '');
+            return $this->name . ' (' . $this->autodj_bitrate . 'kbps ' . strtoupper($this->autodj_format ?? '') . ')';
         }
 
         return $this->name;

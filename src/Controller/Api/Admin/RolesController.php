@@ -5,102 +5,153 @@ declare(strict_types=1);
 namespace App\Controller\Api\Admin;
 
 use App\Acl;
+use App\Controller\Api\Traits\CanSortResults;
 use App\Doctrine\ReloadableEntityManagerInterface;
 use App\Entity;
+use App\Http\Response;
+use App\Http\ServerRequest;
+use App\OpenApi;
 use InvalidArgumentException;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-/**
- * @OA\Get(path="/admin/roles",
- *   operationId="getRoles",
- *   tags={"Administration: Roles"},
- *   description="List all current roles in the system.",
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Role"))
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Post(path="/admin/roles",
- *   operationId="addRole",
- *   tags={"Administration: Roles"},
- *   description="Create a new role.",
- *   @OA\RequestBody(
- *     @OA\JsonContent(ref="#/components/schemas/Role")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Role")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Get(path="/admin/role/{id}",
- *   operationId="getRole",
- *   tags={"Administration: Roles"},
- *   description="Retrieve details for a single current role.",
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="Role ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Role")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Put(path="/admin/role/{id}",
- *   operationId="editRole",
- *   tags={"Administration: Roles"},
- *   description="Update details of a single role.",
- *   @OA\RequestBody(
- *     @OA\JsonContent(ref="#/components/schemas/Role")
- *   ),
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="Role ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Api_Status")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @OA\Delete(path="/admin/role/{id}",
- *   operationId="deleteRole",
- *   tags={"Administration: Roles"},
- *   description="Delete a single role.",
- *   @OA\Parameter(
- *     name="id",
- *     in="path",
- *     description="Role ID",
- *     required=true,
- *     @OA\Schema(type="integer", format="int64")
- *   ),
- *   @OA\Response(response=200, description="Success",
- *     @OA\JsonContent(ref="#/components/schemas/Api_Status")
- *   ),
- *   @OA\Response(response=403, description="Access denied"),
- *   security={{"api_key": {}}},
- * )
- *
- * @extends AbstractAdminApiCrudController<Entity\Role>
- */
+/** @extends AbstractAdminApiCrudController<Entity\Role> */
+#[
+    OA\Get(
+        path: '/admin/roles',
+        operationId: 'getRoles',
+        description: 'List all current roles in the system.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Roles'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: '#/components/schemas/Role')
+                )
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Post(
+        path: '/admin/roles',
+        operationId: 'addRole',
+        description: 'Create a new role.',
+        security: OpenApi::API_KEY_SECURITY,
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(ref: '#/components/schemas/Role')
+        ),
+        tags: ['Administration: Roles'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Role')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Get(
+        path: '/admin/role/{id}',
+        operationId: 'getRole',
+        description: 'Retrieve details for a single current role.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Roles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Role ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Role')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Put(
+        path: '/admin/role/{id}',
+        operationId: 'editRole',
+        description: 'Update details of a single role.',
+        security: OpenApi::API_KEY_SECURITY,
+        requestBody: new OA\RequestBody(
+            content: new OA\JsonContent(ref: '#/components/schemas/Role')
+        ),
+        tags: ['Administration: Roles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Role ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    ),
+    OA\Delete(
+        path: '/admin/role/{id}',
+        operationId: 'deleteRole',
+        description: 'Delete a single role.',
+        security: OpenApi::API_KEY_SECURITY,
+        tags: ['Administration: Roles'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'Role ID',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer', format: 'int64')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Success',
+                content: new OA\JsonContent(ref: '#/components/schemas/Api_Status')
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Access denied'
+            ),
+        ]
+    )
+]
 class RolesController extends AbstractAdminApiCrudController
 {
+    use CanSortResults;
+
     protected string $entityClass = Entity\Role::class;
     protected string $resourceRouteName = 'api:admin:role';
 
@@ -112,6 +163,35 @@ class RolesController extends AbstractAdminApiCrudController
         ValidatorInterface $validator
     ) {
         parent::__construct($em, $serializer, $validator);
+    }
+
+    /**
+     * @param ServerRequest $request
+     * @param Response $response
+     */
+    public function listAction(ServerRequest $request, Response $response): ResponseInterface
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('r, rp')
+            ->from(Entity\Role::class, 'r')
+            ->leftJoin('r.permissions', 'rp');
+
+        $qb = $this->sortQueryBuilder(
+            $request,
+            $qb,
+            [
+                'name' => 'r.name',
+            ],
+            'r.name'
+        );
+
+        $searchPhrase = trim($request->getParam('searchPhrase', ''));
+        if (!empty($searchPhrase)) {
+            $qb->andWhere('(r.name LIKE :name)')
+                ->setParameter('name', '%' . $searchPhrase . '%');
+        }
+
+        return $this->listPaginatedFromQuery($request, $response, $qb->getQuery());
     }
 
     protected function deleteRecord(object $record): void
