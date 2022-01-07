@@ -33,7 +33,7 @@ class PodcastsAction
                 'newArtUrl'         => (string)$router->fromHere('api:stations:podcasts:new-art'),
                 'stationUrl'        => (string)$router->fromHere('stations:index:index'),
                 'quotaUrl'          => (string)$router->fromHere('api:stations:quota', [
-                    'type' => Entity\StorageLocation::TYPE_STATION_PODCASTS,
+                    'type' => Entity\Enums\StorageLocationTypes::StationPodcasts->value,
                 ]),
                 'locale'            => substr($locale->value, 0, 2),
                 'stationTimeZone'   => $station->getTimezone(),

@@ -48,7 +48,7 @@ class FilesAction
                 'mkdirUrl'           => (string)$router->fromHere('api:stations:files:mkdir'),
                 'renameUrl'          => (string)$router->fromHere('api:stations:files:rename'),
                 'quotaUrl'           => (string)$router->fromHere('api:stations:quota', [
-                    'type' => Entity\StorageLocation::TYPE_STATION_MEDIA,
+                    'type' => Entity\Enums\StorageLocationTypes::StationMedia->value,
                 ]),
                 'initialPlaylists'   => $playlists,
                 'customFields'       => $customFieldRepo->fetchArray(),
