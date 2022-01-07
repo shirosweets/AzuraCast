@@ -7,28 +7,22 @@ namespace App;
 use App\Assets\AssetFactory;
 use App\Entity;
 use App\Enums\SupportedLocales;
+use App\Enums\SupportedThemes;
 use App\Http\ServerRequest;
 use App\Service\NChan;
 use Psr\Http\Message\ServerRequestInterface;
 
 class Customization
 {
-    public const DEFAULT_THEME = 'browser';
-
-    public const THEME_BROWSER = 'browser';
-    public const THEME_LIGHT = 'light';
-    public const THEME_DARK = 'dark';
-    public const THEMES = [self::THEME_BROWSER, self::THEME_LIGHT, self::THEME_DARK];
-
     protected ?Entity\User $user = null;
 
     protected Entity\Settings $settings;
 
     protected SupportedLocales $locale;
 
-    protected string $theme = self::DEFAULT_THEME;
+    protected SupportedThemes $theme;
 
-    protected string $publicTheme = self::DEFAULT_THEME;
+    protected SupportedThemes $publicTheme;
 
     protected string $instanceName = '';
 
@@ -45,20 +39,38 @@ class Customization
         $this->user = $request->getAttribute(ServerRequest::ATTR_USER);
 
         // Register current theme
-        $queryParams = $request->getQueryParams();
-
-        if (!empty($queryParams['theme']) && in_array($queryParams['theme'], self::THEMES, true)) {
-            $this->publicTheme = $this->theme = $queryParams['theme'];
-        } else {
-            $this->publicTheme = $this->settings->getPublicTheme();
-
-            if (null !== $this->user && !empty($this->user->getTheme())) {
-                $this->theme = (string)$this->user->getTheme();
-            }
-        }
+        $this->theme = $this->determineTheme($request, false);
+        $this->publicTheme = $this->determineTheme($request, true);
 
         // Register locale
         $this->locale = SupportedLocales::createFromRequest($this->environment, $request);
+    }
+
+    protected function determineTheme(
+        ServerRequestInterface $request,
+        bool $isPublicTheme = false
+    ): SupportedThemes {
+        $queryParams = $request->getQueryParams();
+        if (!empty($queryParams['theme'])) {
+            $theme = SupportedThemes::tryFrom($queryParams['theme']);
+            if (null !== $theme) {
+                return $theme;
+            }
+        }
+
+        if (null !== $this->user) {
+            $themeName = $this->user->getTheme();
+            if (!empty($themeName)) {
+                $theme = SupportedThemes::tryFrom($themeName);
+                if (null !== $theme) {
+                    return $theme;
+                }
+            }
+        }
+
+        return ($isPublicTheme)
+            ? $this->settings->getPublicThemeEnum()
+            : SupportedThemes::default();
     }
 
     public function getLocale(): SupportedLocales
@@ -69,7 +81,7 @@ class Customization
     /**
      * Returns the user-customized or system default theme.
      */
-    public function getTheme(): string
+    public function getTheme(): SupportedThemes
     {
         return $this->theme;
     }
@@ -85,7 +97,7 @@ class Customization
     /**
      * Get the theme name to be used in public (non-logged-in) pages.
      */
-    public function getPublicTheme(): string
+    public function getPublicTheme(): SupportedThemes
     {
         return $this->publicTheme;
     }
