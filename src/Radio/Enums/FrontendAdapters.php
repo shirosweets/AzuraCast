@@ -16,6 +16,11 @@ enum FrontendAdapters: string implements AdapterTypeInterface
     case SHOUTcast = 'shoutcast2';
     case Remote = 'remote';
 
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
     public function getName(): string
     {
         return match ($this) {
@@ -32,5 +37,10 @@ enum FrontendAdapters: string implements AdapterTypeInterface
             self::SHOUTcast => SHOUTcast::class,
             self::Remote => Remote::class,
         };
+    }
+
+    public static function default(): self
+    {
+        return self::Icecast;
     }
 }

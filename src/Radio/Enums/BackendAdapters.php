@@ -14,6 +14,11 @@ enum BackendAdapters: string implements AdapterTypeInterface
     case Liquidsoap = 'liquidsoap';
     case None = 'none';
 
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
     public function getName(): string
     {
         return match ($this) {
@@ -28,5 +33,10 @@ enum BackendAdapters: string implements AdapterTypeInterface
             self::Liquidsoap => Liquidsoap::class,
             self::None => None::class,
         };
+    }
+
+    public static function default(): self
+    {
+        return self::Liquidsoap;
     }
 }

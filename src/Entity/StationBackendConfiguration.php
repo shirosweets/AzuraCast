@@ -76,11 +76,15 @@ class StationBackendConfiguration extends ArrayCollection
 
     public function setRecordStreamsFormat(?string $format): void
     {
-        if (null !== $format && null === StreamFormats::tryFrom(strtolower($format))) {
+        if (null !== $format) {
+            $format = strtolower($format);
+        }
+
+        if (null !== $format && null === StreamFormats::tryFrom($format)) {
             throw new \InvalidArgumentException('Invalid recording type specified.');
         }
 
-        $this->set(self::RECORD_STREAMS_FORMAT, strtolower($format));
+        $this->set(self::RECORD_STREAMS_FORMAT, $format);
     }
 
     public const USE_MANUAL_AUTODJ = 'use_manual_autodj';

@@ -6,6 +6,8 @@ namespace App\Radio\Enums;
 
 interface AdapterTypeInterface
 {
+    public function getValue(): string;
+
     public function getName(): string;
 
     public function getClass(): string;

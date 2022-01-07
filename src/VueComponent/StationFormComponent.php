@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\VueComponent;
 
-use App\Acl;
 use App\Entity\Repository\SettingsRepository;
+use App\Enums\GlobalPermissions;
 use App\Http\ServerRequest;
 use App\Radio\Adapters;
 use App\Radio\Enums\FrontendAdapters;
@@ -28,7 +28,7 @@ class StationFormComponent implements VueComponentInterface
         $settings = $this->settingsRepo->readSettings();
 
         return [
-            'showAdminTab'          => $request->getAcl()->isAllowed(Acl::GLOBAL_STATIONS),
+            'showAdminTab'          => $request->getAcl()->isAllowed(GlobalPermissions::Stations),
             'showAdvanced'          => $settings->getEnableAdvancedFeatures(),
             'timezones'             => $this->getTimezones(),
             'isShoutcastInstalled'  => isset($installedFrontends[FrontendAdapters::SHOUTcast->value]),

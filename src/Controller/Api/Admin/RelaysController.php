@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller\Api\Admin;
 
-use App\Acl;
 use App\Entity;
+use App\Enums\StationPermissions;
 use App\Http\Response;
 use App\Http\ServerRequest;
 use App\Radio\Adapters;
@@ -41,6 +41,7 @@ class RelaysController
         protected Adapters $adapters
     ) {
     }
+
     public function __invoke(ServerRequest $request, Response $response): ResponseInterface
     {
         $stations = $this->getManageableStations($request);
@@ -106,7 +107,7 @@ class RelaysController
         return array_filter(
             $all_stations,
             static function (Entity\Station $station) use ($acl) {
-                return $acl->isAllowed(Acl::STATION_BROADCASTING, $station->getId());
+                return $acl->isAllowed(StationPermissions::Broadcasting, $station->getId());
             }
         );
     }
@@ -166,7 +167,7 @@ class RelaysController
                 $remote->setDisplayName($mount->getDisplayName() . ' (' . $relay->getName() . ')');
                 $remote->setIsVisibleOnPublicPages($relay->getIsVisibleOnPublicPages());
                 $remote->setAutodjBitrate($mount->getAutodjBitrate());
-                $remote->setAutodjFormat($mount->getAutodjFormatEnum());
+                $remote->setAutodjFormat($mount->getAutodjFormat());
                 $remote->setUrl($relay->getBaseUrl());
                 $remote->setMount($mount->getName());
 

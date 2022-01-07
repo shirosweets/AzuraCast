@@ -448,7 +448,9 @@ class Station implements Stringable, IdentifiableEntityInterface
 
     public function getFrontendTypeEnum(): FrontendAdapters
     {
-        return FrontendAdapters::from($this->frontend_type);
+        return (null !== $this->frontend_type)
+            ? FrontendAdapters::from($this->frontend_type)
+            : FrontendAdapters::default();
     }
 
     public function setFrontendType(?string $frontend_type = null): void
@@ -501,7 +503,9 @@ class Station implements Stringable, IdentifiableEntityInterface
 
     public function getBackendTypeEnum(): BackendAdapters
     {
-        return BackendAdapters::from($this->backend_type);
+        return (null !== $this->backend_type)
+            ? BackendAdapters::from($this->backend_type)
+            : BackendAdapters::default();
     }
 
     public function setBackendType(string $backend_type = null): void

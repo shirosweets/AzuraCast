@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use App\Acl;
+use App\Enums\StationPermissions;
 use App\Exception\PermissionDeniedException;
 use App\Http\Response;
 use App\Http\ServerRequest;
@@ -66,7 +66,7 @@ class InternalController
         $station = $request->getStation();
 
         $acl = $request->getAcl();
-        if ($acl->isAllowed(Acl::GLOBAL_VIEW, $station->getId())) {
+        if ($acl->isAllowed(StationPermissions::View, $station->getId())) {
             return;
         }
 

@@ -104,7 +104,7 @@ class Adapters
     }
 
     /**
-     * @param \StringBackedEnum&AdapterTypeInterface[] $cases
+     * @param array<AdapterTypeInterface> $cases
      * @param bool $checkInstalled
      * @return mixed[]
      */
@@ -112,9 +112,9 @@ class Adapters
     {
         $adapters = [];
         foreach ($cases as $adapter) {
-            $adapters[$adapter->value] = [
-                'enum' => $adapter,
-                'name' => $adapter->getName(),
+            $adapters[$adapter->getValue()] = [
+                'enum'  => $adapter,
+                'name'  => $adapter->getName(),
                 'class' => $adapter->getClass(),
             ];
         }

@@ -18,6 +18,11 @@ enum RemoteAdapters: string implements AdapterTypeInterface
     case Icecast = 'icecast';
     case AzuraRelay = 'azurarelay';
 
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
     public function getName(): string
     {
         return match ($this) {
