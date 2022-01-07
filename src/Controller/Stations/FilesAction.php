@@ -30,7 +30,7 @@ class FilesAction
                 ORDER BY sp.name ASC
             DQL
         )->setParameter('station_id', $station->getId())
-            ->setParameter('source', Entity\StationPlaylist::SOURCE_SONGS)
+            ->setParameter('source', Entity\Enums\PlaylistSources::Songs->value)
             ->getArrayResult();
 
         $router = $request->getRouter();

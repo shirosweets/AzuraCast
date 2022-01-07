@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Radio;
 
+use App\Entity\Enums\PlaylistTypes;
 use App\Entity\Station;
 use App\Entity\StationPlaylist;
 use App\Environment;
@@ -50,7 +51,7 @@ class Configuration
         // Check for at least one playlist, and create one if it doesn't exist.
         $defaultPlaylists = $station->getPlaylists()->filter(
             function (StationPlaylist $row) {
-                return $row->getIsEnabled() && StationPlaylist::TYPE_DEFAULT === $row->getType();
+                return $row->getIsEnabled() && PlaylistTypes::default() === $row->getTypeEnum();
             }
         );
 
@@ -408,15 +409,15 @@ class Configuration
         [, $program_name] = explode(':', $adapter->getProgramName($station));
 
         $config_lines = [
-            'user' => 'azuracast',
-            'priority' => $priority ?? 50,
-            'command' => $adapter->getCommand($station),
-            'directory' => $station->getRadioConfigDir(),
-            'environment' => 'TZ="' . $station->getTimezone() . '"',
-            'stdout_logfile' => $adapter->getLogPath($station),
+            'user'                    => 'azuracast',
+            'priority'                => $priority ?? 50,
+            'command'                 => $adapter->getCommand($station),
+            'directory'               => $station->getRadioConfigDir(),
+            'environment'             => 'TZ="' . $station->getTimezone() . '"',
+            'stdout_logfile'          => $adapter->getLogPath($station),
             'stdout_logfile_maxbytes' => '5MB',
-            'stdout_logfile_backups' => '10',
-            'redirect_stderr' => 'true',
+            'stdout_logfile_backups'  => '10',
+            'redirect_stderr'         => 'true',
         ];
 
         $supervisor_config[] = '[program:' . $program_name . ']';

@@ -227,7 +227,7 @@ class ConfigWriter implements EventSubscriberInterface
 
             $playlistConfigLines = [];
 
-            if (Entity\StationPlaylist::SOURCE_SONGS === $playlist->getSource()) {
+            if (Entity\Enums\PlaylistSources::Songs === $playlist->getSourceEnum()) {
                 $playlistFilePath = $this->writePlaylistFile($playlist, false);
                 if (!$playlistFilePath) {
                     continue;
@@ -238,13 +238,12 @@ class ConfigWriter implements EventSubscriberInterface
                     'mime_type="audio/x-mpegurl"',
                 ];
 
-                $playlistModes = [
-                    Entity\StationPlaylist::ORDER_SEQUENTIAL => 'normal',
-                    Entity\StationPlaylist::ORDER_SHUFFLE    => 'randomize',
-                    Entity\StationPlaylist::ORDER_RANDOM     => 'random',
-                ];
-
-                $playlistParams[] = 'mode="' . $playlistModes[$playlist->getOrder()] . '"';
+                $playlistMode = match ($playlist->getOrderEnum()) {
+                    Entity\Enums\PlaylistOrders::Sequential => 'normal',
+                    Entity\Enums\PlaylistOrders::Shuffle => 'randomize',
+                    Entity\Enums\PlaylistOrders::Random => 'random'
+                };
+                $playlistParams[] = 'mode="' . $playlistMode . '"';
 
                 if ($playlist->backendLoopPlaylistOnce()) {
                     $playlistParams[] = 'reload_mode="never"';
@@ -265,15 +264,15 @@ class ConfigWriter implements EventSubscriberInterface
                 $playlistConfigLines[] = $playlistVarName . ' = cue_cut(id="cue_'
                     . self::cleanUpString($playlistVarName) . '", ' . $playlistVarName . ')';
             } else {
-                switch ($playlist->getRemoteType()) {
-                    case Entity\StationPlaylist::REMOTE_TYPE_PLAYLIST:
+                switch ($playlist->getRemoteTypeEnum()) {
+                    case Entity\Enums\PlaylistRemoteTypes::Playlist:
                         $playlistFunc = 'playlist("'
                             . self::cleanUpString($playlist->getRemoteUrl())
                             . '")';
                         $playlistConfigLines[] = $playlistVarName . ' = ' . $playlistFunc;
                         break;
 
-                    case Entity\StationPlaylist::REMOTE_TYPE_STREAM:
+                    case Entity\Enums\PlaylistRemoteTypes::Stream:
                     default:
                         $remote_url = $playlist->getRemoteUrl();
                         if (null !== $remote_url) {
@@ -292,7 +291,7 @@ class ConfigWriter implements EventSubscriberInterface
                 $playlistConfigLines[] = $playlistVarName . ' = drop_metadata(' . $playlistVarName . ')';
             }
 
-            if (Entity\StationPlaylist::TYPE_ADVANCED === $playlist->getType()) {
+            if (Entity\Enums\PlaylistTypes::Advanced === $playlist->getTypeEnum()) {
                 $playlistConfigLines[] = 'ignore(' . $playlistVarName . ')';
             }
 
@@ -304,8 +303,8 @@ class ConfigWriter implements EventSubscriberInterface
 
             $scheduleItems = $playlist->getScheduleItems();
 
-            switch ($playlist->getType()) {
-                case Entity\StationPlaylist::TYPE_DEFAULT:
+            switch ($playlist->getTypeEnum()) {
+                case Entity\Enums\PlaylistTypes::Standard:
                     if ($scheduleItems->count() > 0) {
                         foreach ($scheduleItems as $scheduleItem) {
                             $play_time = $this->getScheduledPlaylistPlayTime($scheduleItem);
@@ -323,9 +322,9 @@ class ConfigWriter implements EventSubscriberInterface
                     }
                     break;
 
-                case Entity\StationPlaylist::TYPE_ONCE_PER_X_SONGS:
-                case Entity\StationPlaylist::TYPE_ONCE_PER_X_MINUTES:
-                    if (Entity\StationPlaylist::TYPE_ONCE_PER_X_SONGS === $playlist->getType()) {
+                case Entity\Enums\PlaylistTypes::OncePerXSongs:
+                case Entity\Enums\PlaylistTypes::OncePerXMinutes:
+                    if (Entity\Enums\PlaylistTypes::OncePerXSongs === $playlist->getTypeEnum()) {
                         $playlistScheduleVar = 'rotate(weights=[1,'
                             . $playlist->getPlayPerSongs() . '], [' . $playlistVarName . ', radio])';
                     } else {
@@ -351,7 +350,7 @@ class ConfigWriter implements EventSubscriberInterface
                     }
                     break;
 
-                case Entity\StationPlaylist::TYPE_ONCE_PER_HOUR:
+                case Entity\Enums\PlaylistTypes::OncePerHour:
                     $minutePlayTime = $playlist->getPlayPerHourMinute() . 'm';
 
                     if ($scheduleItems->count() > 0) {
