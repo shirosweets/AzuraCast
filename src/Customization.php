@@ -6,6 +6,7 @@ namespace App;
 
 use App\Assets\AssetFactory;
 use App\Entity;
+use App\Enums\SupportedLocales;
 use App\Http\ServerRequest;
 use App\Service\NChan;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,7 +24,7 @@ class Customization
 
     protected Entity\Settings $settings;
 
-    protected Locale $locale;
+    protected SupportedLocales $locale;
 
     protected string $theme = self::DEFAULT_THEME;
 
@@ -57,11 +58,10 @@ class Customization
         }
 
         // Register locale
-        $this->locale = Locale::createFromRequest($this->environment, $request);
-        $this->locale->register();
+        $this->locale = SupportedLocales::createFromRequest($this->environment, $request);
     }
 
-    public function getLocale(): Locale
+    public function getLocale(): SupportedLocales
     {
         return $this->locale;
     }
@@ -177,5 +177,9 @@ class Customization
         }
 
         return $this->settings->getEnableWebsockets();
+    }
+
+    public function registerLocale(SupportedLocales $locale): void
+    {
     }
 }

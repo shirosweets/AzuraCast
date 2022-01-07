@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Enums\StationPermissions;
+use App\Enums\SupportedLocales;
 use App\Exception\PermissionDeniedException;
 use App\Http\Response;
 use App\Http\ServerRequest;
-use App\Locale;
 use App\Radio\AutoDJ;
 use App\Radio\Backend\Liquidsoap;
 use App\Service\IpGeolocation;
@@ -182,7 +182,7 @@ class InternalController
         }
 
         $listenerIp = $request->getParam('ip') ?? '';
-        $listenerLocation = $this->ipGeolocation->getLocationInfo($listenerIp, Locale::DEFAULT_LOCALE);
+        $listenerLocation = $this->ipGeolocation->getLocationInfo($listenerIp, SupportedLocales::default());
 
         $allowedIps = $frontendConfig->getAllowedIps();
         if (!empty($allowedIps)) {
@@ -209,7 +209,7 @@ class InternalController
         if ('success' === $listenerLocation['status']) {
             $listenerCountry = $listenerLocation['country'];
 
-            $countries = Countries::getNames(Locale::DEFAULT_LOCALE);
+            $countries = Countries::getNames(SupportedLocales::default()->name);
 
             $listenerCountryCode = '';
             foreach ($countries as $countryCode => $countryName) {
